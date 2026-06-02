@@ -1,0 +1,79 @@
+// 法规政策通告 — NMPA / 福建卫健委 / 福建 CDC
+export const REGULATIONS = [
+  {
+    id: 'R-001',
+    source: 'NMPA',
+    title: '关于发布 2025 年第 4 季度药品不良反应监测年度报告的公告',
+    summary: '本年度共收到不良反应报告 215.3 万份，同比增长 6.2%。抗感染药报告占比仍居首位。',
+    affected_categories: ['抗感染药', '中药注射剂'],
+    risk_level: 'Medium',
+    published_at: '2025-12-20',
+    response: '门店需对高频投诉品种进行重点登记，配合药师问诊。',
+  },
+  {
+    id: 'R-002',
+    source: 'NMPA',
+    title: '关于某批次铝碳酸镁片启动三级召回的公告',
+    summary: '涉事生产企业某批次溶出度不符合标准，可能影响疗效。',
+    affected_categories: ['胃药', '消化系统'],
+    risk_level: 'High',
+    published_at: '2025-12-15',
+    response: '立即下架相关批次，留存进货单据，等待厂家召回通知。',
+  },
+  {
+    id: 'R-003',
+    source: '福建卫健委',
+    title: '关于做好冬春季流感与呼吸道传染病防控工作的通知',
+    summary: '要求加强药品储备，药店、基层医疗机构 24 小时保障退烧止咳药品供应。',
+    affected_categories: ['退烧药', '止咳药', '感冒药'],
+    risk_level: 'High',
+    published_at: '2025-12-10',
+    response: '门店需对连花清瘟、布洛芬、止咳糖浆等核心 SKU 维持 14 天安全库存。',
+  },
+  {
+    id: 'R-004',
+    source: '福建卫健委',
+    title: '关于推进电子处方流转工作的实施意见',
+    summary: '鼓励互联网医院处方流转至零售药店，凭电子处方销售处方药。',
+    affected_categories: ['处方药', '互联网医疗'],
+    risk_level: 'Low',
+    published_at: '2025-11-28',
+    response: '门店可对接合规电子处方平台，扩大处方药销售半径。',
+  },
+  {
+    id: 'R-005',
+    source: '福建 CDC',
+    title: '2025 年第 50 周流感周报',
+    summary: '南方省份流感阳性率 32.4%，ILI% 8.4%，以 A(H3N2) 型为主。',
+    affected_categories: ['抗病毒药', '退烧药'],
+    risk_level: 'Medium',
+    published_at: '2025-12-16',
+    response: '门店可增加奥司他韦、布洛芬、连花清瘟陈列与库存。',
+  },
+  {
+    id: 'R-006',
+    source: '福建 CDC',
+    title: '老年人流感疫苗免费接种工作启动通知',
+    summary: '福州、厦门、泉州三地 65 岁以上老人可到社区免费接种四价流感疫苗。',
+    affected_categories: ['疫苗', '公共卫生'],
+    risk_level: 'Low',
+    published_at: '2025-10-08',
+    response: '门店可张贴海报协助宣传，引导老人前往就近社区接种。',
+  },
+  {
+    id: 'R-007',
+    source: '福建 CDC',
+    title: '手足口病疫情风险提示 (12 月)',
+    summary: '12 月为手足口病低发期，但 EV71 仍可在托幼机构散发，提示做好晨检。',
+    affected_categories: ['儿科', '抗病毒药'],
+    risk_level: 'Low',
+    published_at: '2025-12-05',
+    response: '门店维持口腔炎喷雾、利巴韦林等儿科 SKU 正常库存即可。',
+  },
+]
+
+export const REGULATION_SOURCES = ['All', 'NMPA', '福建卫健委', '福建 CDC']
+
+export function getRegulationsMock() {
+  return { items: REGULATIONS }
+}
