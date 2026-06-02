@@ -1,9 +1,10 @@
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAppState } from '@/composables/useStoreData'
 
 const route = useRoute()
-const role = ref('HQ Manager')
+const { appState, setRole, setStore, ROLES, STORES, roleMeta } = useAppState()
 
 const navItems = [
   { name: '战情总览', path: '/' },
@@ -11,6 +12,8 @@ const navItems = [
   { name: 'AI 采购决策', path: '/decisions' },
   { name: '法规政策', path: '/regulations' },
 ]
+
+const avatarLetter = computed(() => roleMeta().short)
 </script>
 
 <template>
@@ -45,15 +48,28 @@ const navItems = [
         <div class="flex items-center gap-2">
           <div class="hidden sm:flex items-center gap-2 bg-slate-50 rounded-md px-2 py-1 border border-slate-200">
             <span class="text-[10px] text-slate-500">角色</span>
-            <select v-model="role" class="text-xs bg-transparent font-bold text-slate-700 focus:outline-none">
-              <option>HQ Manager</option>
-              <option>区域督导</option>
-              <option>门店药师</option>
+            <select
+              :value="appState.role"
+              @change="setRole($event.target.value)"
+              class="text-xs bg-transparent font-bold text-slate-700 focus:outline-none"
+            >
+              <option v-for="r in ROLES" :key="r.key" :value="r.label">{{ r.label }}</option>
+            </select>
+          </div>
+
+          <div class="hidden sm:flex items-center gap-2 bg-slate-50 rounded-md px-2 py-1 border border-slate-200">
+            <span class="text-[10px] text-slate-500">门店</span>
+            <select
+              :value="appState.storeId"
+              @change="setStore($event.target.value)"
+              class="text-xs bg-transparent font-bold text-slate-700 focus:outline-none"
+            >
+              <option v-for="s in STORES" :key="s.store_id" :value="s.store_id">{{ s.name }}</option>
             </select>
           </div>
 
           <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">
-            {{ role[0] }}
+            {{ avatarLetter }}
           </div>
         </div>
       </div>

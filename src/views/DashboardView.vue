@@ -1,11 +1,14 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { fetchDashboard, fetchDecisions, fetchSentiment } from '@/data'
+import { useAppState } from '@/composables/useStoreData'
 import AlertTicker from '@/components/AlertTicker.vue'
 import KpiCards from '@/components/KpiCards.vue'
 import SuggestionCard from '@/components/SuggestionCard.vue'
 import InsightCard from '@/components/InsightCard.vue'
 import ScriptModal from '@/components/ScriptModal.vue'
+
+const { appState, currentStore } = useAppState()
 
 const loading = ref(true)
 const reportDate = ref('')
@@ -16,6 +19,8 @@ const topInsights = ref([])
 
 const modalOpen = ref(false)
 const modalData = ref({})
+
+const storeName = computed(() => currentStore().name)
 
 function openScript(item) {
   modalData.value = {
@@ -30,17 +35,26 @@ function openSource(src) {
   if (src?.url) window.open(src.url, '_blank', 'noopener')
 }
 
-onMounted(async () => {
-  const [d, dec, sent] = await Promise.all([fetchDashboard(), fetchDecisions(), fetchSentiment()])
+async function load(sid) {
+  const token = ++loadToken
+  loading.value = true
+  const [d, dec, sent] = await Promise.all([
+    fetchDashboard(sid),
+    fetchDecisions(sid),
+    fetchSentiment(sid),
+  ])
+  if (token !== loadToken) return
   reportDate.value = d.report_date
   kpi.value = d.kpiData
   alerts.value = d.alerts
-  // 摘要视图：取最紧急 2 条补货建议
   urgentSuggestions.value = dec.restock.slice(0, 2)
-  // 5 条舆情
   topInsights.value = sent.items.slice(0, 5)
   loading.value = false
-})
+}
+
+let loadToken = 0
+onMounted(() => load(appState.storeId))
+watch(() => appState.storeId, (sid) => load(sid))
 </script>
 
 <template>
@@ -54,7 +68,7 @@ onMounted(async () => {
             <span class="w-2 h-7 bg-emerald-500 rounded-full"></span>
             战情总览
           </h1>
-          <p class="text-xs text-slate-500 mt-1">报告日期 · {{ reportDate }} · 福州鼓楼东街店</p>
+          <p class="text-xs text-slate-500 mt-1">报告日期 · {{ reportDate }} · {{ storeName }}</p>
         </div>
         <router-link
           to="/decisions"
@@ -62,6 +76,11 @@ onMounted(async () => {
         >
           查看完整决策 →
         </router-link>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap text-xs">
+        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">当前门店：{{ storeName }}</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ appState.role }}</span>
       </div>
 
       <KpiCards :kpi="kpi" />

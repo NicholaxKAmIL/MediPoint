@@ -9,6 +9,7 @@ export const REGULATIONS = [
     risk_level: 'Medium',
     published_at: '2025-12-20',
     response: '门店需对高频投诉品种进行重点登记，配合药师问诊。',
+    regions: ['全国'],
   },
   {
     id: 'R-002',
@@ -19,6 +20,7 @@ export const REGULATIONS = [
     risk_level: 'High',
     published_at: '2025-12-15',
     response: '立即下架相关批次，留存进货单据，等待厂家召回通知。',
+    regions: ['全国'],
   },
   {
     id: 'R-003',
@@ -29,6 +31,7 @@ export const REGULATIONS = [
     risk_level: 'High',
     published_at: '2025-12-10',
     response: '门店需对连花清瘟、布洛芬、止咳糖浆等核心 SKU 维持 14 天安全库存。',
+    regions: ['福建'],
   },
   {
     id: 'R-004',
@@ -39,6 +42,7 @@ export const REGULATIONS = [
     risk_level: 'Low',
     published_at: '2025-11-28',
     response: '门店可对接合规电子处方平台，扩大处方药销售半径。',
+    regions: ['福建'],
   },
   {
     id: 'R-005',
@@ -49,6 +53,7 @@ export const REGULATIONS = [
     risk_level: 'Medium',
     published_at: '2025-12-16',
     response: '门店可增加奥司他韦、布洛芬、连花清瘟陈列与库存。',
+    regions: ['福建'],
   },
   {
     id: 'R-006',
@@ -59,6 +64,7 @@ export const REGULATIONS = [
     risk_level: 'Low',
     published_at: '2025-10-08',
     response: '门店可张贴海报协助宣传，引导老人前往就近社区接种。',
+    regions: ['福建'],
   },
   {
     id: 'R-007',
@@ -69,11 +75,36 @@ export const REGULATIONS = [
     risk_level: 'Low',
     published_at: '2025-12-05',
     response: '门店维持口腔炎喷雾、利巴韦林等儿科 SKU 正常库存即可。',
+    regions: ['全国'],
+  },
+  {
+    id: 'R-008',
+    source: '福建卫健委',
+    title: '厦门地区过敏季延长应对指引',
+    summary: '提示思明、湖里两区花粉浓度持续偏高，建议药店加强鼻喷与抗组胺备货。',
+    affected_categories: ['过敏', '鼻喷'],
+    risk_level: 'Medium',
+    published_at: '2025-12-12',
+    response: '厦门门店重点关注糠酸莫米松鼻喷雾剂、氯雷他定等 SKU 库存。',
+    regions: ['福建'],
+  },
+  {
+    id: 'R-009',
+    source: '福建 CDC',
+    title: '泉州湿热气候健康提示',
+    summary: '提示泉州地区居民注意饮食卫生，家中常备藿香正气类中成药。',
+    affected_categories: ['中成药', '肠胃'],
+    risk_level: 'Low',
+    published_at: '2025-12-08',
+    response: '泉州门店藿香正气水、保和丸等 SKU 维持安全库存。',
+    regions: ['福建'],
   },
 ]
 
 export const REGULATION_SOURCES = ['All', 'NMPA', '福建卫健委', '福建 CDC']
 
-export function getRegulationsMock() {
-  return { items: REGULATIONS }
+export function getRegulationsMock(storeId) {
+  const sid = storeId || 'S001'
+  const items = REGULATIONS.filter(r => !r.regions || r.regions.includes('全国') || r.regions.includes('福建'))
+  return { items, storeId: sid }
 }

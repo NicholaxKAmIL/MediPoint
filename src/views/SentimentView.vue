@@ -1,8 +1,11 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { fetchSentiment } from '@/data'
 import { SENTIMENT_SOURCES } from '@/data/mockSentiment'
+import { useAppState } from '@/composables/useStoreData'
 import InsightCard from '@/components/InsightCard.vue'
+
+const { appState, currentStore } = useAppState()
 
 const loading = ref(true)
 const allItems = ref([])
@@ -10,18 +13,42 @@ const keywordTrend = ref([])
 const series = ref([])
 const activeTab = ref('All')
 
+const storeName = computed(() => currentStore().name)
+
+const sourceLabel = (s) => ({
+  All: '全部',
+  Weibo: '微博',
+  Xiaohongshu: '小红书',
+  GovNotice: '政府公告',
+}[s] || s)
+
+const tabCounts = computed(() => {
+  const c = { All: allItems.value.length, Weibo: 0, Xiaohongshu: 0, GovNotice: 0 }
+  for (const it of allItems.value) {
+    if (c[it.source] !== undefined) c[it.source]++
+  }
+  return c
+})
+
 const filtered = computed(() => {
   if (activeTab.value === 'All') return allItems.value
   return allItems.value.filter(i => i.source === activeTab.value)
 })
 
-onMounted(async () => {
-  const d = await fetchSentiment()
+async function load(sid) {
+  const token = ++loadToken
+  loading.value = true
+  const d = await fetchSentiment(sid)
+  if (token !== loadToken) return
   allItems.value = d.items
   keywordTrend.value = d.keyword_trend
   series.value = d.seven_day_series
   loading.value = false
-})
+}
+
+let loadToken = 0
+onMounted(() => load(appState.storeId))
+watch(() => appState.storeId, (sid) => load(sid))
 
 const maxSeriesValue = computed(() => {
   if (!series.value.length) return 100
@@ -40,31 +67,35 @@ const maxSeriesValue = computed(() => {
         <p class="text-xs text-slate-500 mt-1">微博 · 小红书 · 政府公告 — 实时驱动决策</p>
       </div>
 
+      <div class="flex items-center gap-2 flex-wrap text-xs">
+        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">当前门店：{{ storeName }}</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ appState.role }}</span>
+        <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">共 {{ allItems.length }} 条</span>
+      </div>
+
       <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         <button
           v-for="tab in SENTIMENT_SOURCES"
           :key="tab"
           @click="activeTab = tab"
-          :class="`px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ${
+          :aria-pressed="activeTab === tab"
+          :class="`px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border duration-150 ${
             activeTab === tab
-              ? 'bg-slate-800 text-white border-slate-800 shadow-md'
+              ? 'bg-slate-800 text-white border-slate-800 shadow-md ring-2 ring-emerald-400 ring-offset-1'
               : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
           }`"
         >
-          {{
-            tab === 'All' ? '全部' :
-            tab === 'Weibo' ? '微博' :
-            tab === 'Xiaohongshu' ? '小红书' :
-            tab === 'GovNotice' ? '政府公告' : tab
-          }}
+          <span v-if="activeTab === tab">✅ </span>{{ sourceLabel(tab) }} ({{ tabCounts[tab] }})
         </button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section class="lg:col-span-2 space-y-3">
+        <section class="lg:col-span-2 space-y-3 transition-opacity duration-200">
           <div v-if="loading" class="text-center text-slate-400 py-10 text-sm">加载中...</div>
           <InsightCard v-for="(it, idx) in filtered" :key="idx" :insight="it" />
-          <div v-if="!loading && filtered.length === 0" class="text-center py-10 text-slate-400 text-sm">此分类暂无舆情</div>
+          <div v-if="!loading && filtered.length === 0" class="text-center py-10 text-slate-400 text-sm">
+            此分类暂无舆情 · 试试切换其他平台
+          </div>
         </section>
 
         <aside class="space-y-4">

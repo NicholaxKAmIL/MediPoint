@@ -1,17 +1,30 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { fetchRegulations } from '@/data'
 import { REGULATION_SOURCES } from '@/data/mockRegulations'
+import { useAppState } from '@/composables/useStoreData'
 import RiskBadge from '@/components/RiskBadge.vue'
+
+const { appState, currentStore } = useAppState()
 
 const loading = ref(true)
 const items = ref([])
 const activeSource = ref('All')
 const expandedId = ref(null)
 
+const storeName = computed(() => currentStore().name)
+
 const filtered = computed(() => {
   if (activeSource.value === 'All') return items.value
   return items.value.filter(i => i.source === activeSource.value)
+})
+
+const sourceCounts = computed(() => {
+  const c = { All: items.value.length, NMPA: 0, '福建卫健委': 0, '福建 CDC': 0 }
+  for (const it of items.value) {
+    if (c[it.source] !== undefined) c[it.source]++
+  }
+  return c
 })
 
 const counts = computed(() => {
@@ -24,11 +37,18 @@ function toggle(id) {
   expandedId.value = expandedId.value === id ? null : id
 }
 
-onMounted(async () => {
-  const d = await fetchRegulations()
+async function load(sid) {
+  const token = ++loadToken
+  loading.value = true
+  const d = await fetchRegulations(sid)
+  if (token !== loadToken) return
   items.value = d.items
   loading.value = false
-})
+}
+
+let loadToken = 0
+onMounted(() => load(appState.storeId))
+watch(() => appState.storeId, (sid) => load(sid))
 
 const sourceLabel = (s) => ({
   'NMPA': 'NMPA',
@@ -46,6 +66,12 @@ const sourceLabel = (s) => ({
           法规政策通告
         </h1>
         <p class="text-xs text-slate-500 mt-1">NMPA · 福建卫健委 · 福建 CDC — 合规风险一目了然</p>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap text-xs">
+        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">当前门店：{{ storeName }}</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ appState.role }}</span>
+        <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">共 {{ items.length }} 条</span>
       </div>
 
       <div class="grid grid-cols-3 gap-3">
@@ -68,13 +94,14 @@ const sourceLabel = (s) => ({
           v-for="src in REGULATION_SOURCES"
           :key="src"
           @click="activeSource = src"
-          :class="`px-3 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ${
+          :aria-pressed="activeSource === src"
+          :class="`px-3 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border duration-150 ${
             activeSource === src
-              ? 'bg-slate-800 text-white border-slate-800 shadow-md'
+              ? 'bg-slate-800 text-white border-slate-800 shadow-md ring-2 ring-emerald-400 ring-offset-1'
               : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
           }`"
         >
-          {{ src === 'All' ? '全部' : sourceLabel(src) }}
+          <span v-if="activeSource === src">✅ </span>{{ src === 'All' ? '全部' : sourceLabel(src) }} ({{ sourceCounts[src] }})
         </button>
       </div>
 
