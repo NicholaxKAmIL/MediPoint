@@ -12,7 +12,7 @@ const scenarios = [
   { key: 'pregnant', label: '老人孕妇', emoji: '🤰', message: '孕妇感冒发烧能吃什么药？' },
   { key: 'kids', label: '儿童用药', emoji: '👶', message: '儿童退烧药推荐' },
   { key: 'allergy', label: '过敏鼻炎', emoji: '🌸', message: '换季过敏性鼻炎怎么用药？' },
-  { key: 'stomach', label: '肠胃不适', emoji: '🫃', message: '胃药饭前吃还是饭后吃？' },
+  { key: 'stomach', label: '肠胃不适', emoji: '🤢', message: '胃药饭前吃还是饭后吃？' },
 ]
 
 const refToPanel = ref(null)

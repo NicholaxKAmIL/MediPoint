@@ -48,6 +48,8 @@ function scrollBottom() {
 
 const isFull = () => props.size === 'full'
 const isLg = () => props.size === 'lg'
+
+defineExpose({ input, send })
 </script>
 
 <template>
