@@ -5,7 +5,7 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 
 // ⚡️ 設定 API 連線位置
-const API_BASE_URL = 'https://uie47061-medipoint.hf.space' 
+const API_BASE_URL = 'http://localhost:8000' 
 
 // --- 狀態管理 ---
 const loading = ref(true)
