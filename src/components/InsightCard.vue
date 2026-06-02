@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   insight: { type: Object, required: true },
 })
@@ -8,8 +10,7 @@ const sourceMap = {
   Xiaohongshu: { label: '小红书', cls: 'bg-pink-100 text-pink-700' },
   GovNotice: { label: '政府公告', cls: 'bg-blue-100 text-blue-700' },
 }
-const src = props.insight.source || 'Weibo'
-const tag = sourceMap[src] || sourceMap.Weibo
+const tag = computed(() => sourceMap[props.insight.source] || sourceMap.Weibo)
 
 const sentimentMap = {
   positive: { label: '正面', cls: 'bg-emerald-50 text-emerald-600' },
@@ -17,7 +18,7 @@ const sentimentMap = {
   concern: { label: '关注', cls: 'bg-amber-50 text-amber-600' },
   negative: { label: '负面', cls: 'bg-red-50 text-red-600' },
 }
-const sent = sentimentMap[props.insight.sentiment] || sentimentMap.neutral
+const sent = computed(() => sentimentMap[props.insight.sentiment] || sentimentMap.neutral)
 </script>
 
 <template>
