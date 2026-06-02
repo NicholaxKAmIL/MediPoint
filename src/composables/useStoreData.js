@@ -1,16 +1,7 @@
-import {
-  appState,
-  setRole,
-  setStore,
-  currentStore,
-  roleMeta,
-  ROLES,
-} from '@/composables/useAppState'
-import { STORES } from '@/data/mockDashboard'
-import { getDashboardMock } from '@/data/mockDashboard'
-import { getSentimentMock } from '@/data/mockSentiment'
-import { getDecisionsMock } from '@/data/mockDecisions'
-import { getRegulationsMock } from '@/data/mockRegulations'
+import { getDashboardByScope } from '@/data/mockDashboard'
+import { getSentimentByScope } from '@/data/mockSentiment'
+import { getDecisionsByScope } from '@/data/mockDecisions'
+import { getRegulationsByScope } from '@/data/mockRegulations'
 import { chatReply as mockChatReply } from '@/data/mockChat'
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
@@ -27,24 +18,32 @@ async function safeFetch(path, opts = {}) {
   }
 }
 
-export async function fetchDashboard(storeId) {
-  if (USE_MOCK) return getDashboardMock(storeId)
-  return (await safeFetch(`/api/mock/dashboard?store=${storeId || ''}`)) || getDashboardMock(storeId)
+function visibleIds(account) {
+  return account?.store_ids || []
 }
 
-export async function fetchSentiment(storeId) {
-  if (USE_MOCK) return getSentimentMock(storeId)
-  return (await safeFetch(`/api/mock/sentiment?store=${storeId || ''}`)) || getSentimentMock(storeId)
+export async function fetchDashboard(account) {
+  if (USE_MOCK) return getDashboardByScope(account, visibleIds(account))
+  const sid = account?.store_ids?.[0] || ''
+  return (await safeFetch(`/api/mock/dashboard?store=${sid}`)) || getDashboardByScope(account, visibleIds(account))
 }
 
-export async function fetchDecisions(storeId) {
-  if (USE_MOCK) return getDecisionsMock(storeId)
-  return (await safeFetch(`/api/mock/decisions?store=${storeId || ''}`)) || getDecisionsMock(storeId)
+export async function fetchSentiment(account) {
+  if (USE_MOCK) return getSentimentByScope(account, visibleIds(account))
+  const sid = account?.store_ids?.[0] || ''
+  return (await safeFetch(`/api/mock/sentiment?store=${sid}`)) || getSentimentByScope(account, visibleIds(account))
 }
 
-export async function fetchRegulations(storeId) {
-  if (USE_MOCK) return getRegulationsMock(storeId)
-  return (await safeFetch(`/api/mock/regulations?store=${storeId || ''}`)) || getRegulationsMock(storeId)
+export async function fetchDecisions(account) {
+  if (USE_MOCK) return getDecisionsByScope(account, visibleIds(account))
+  const sid = account?.store_ids?.[0] || ''
+  return (await safeFetch(`/api/mock/decisions?store=${sid}`)) || getDecisionsByScope(account, visibleIds(account))
+}
+
+export async function fetchRegulations(account) {
+  if (USE_MOCK) return getRegulationsByScope(account, visibleIds(account))
+  const sid = account?.store_ids?.[0] || ''
+  return (await safeFetch(`/api/mock/regulations?store=${sid}`)) || getRegulationsByScope(account, visibleIds(account))
 }
 
 export async function sendChat(message) {
@@ -55,8 +54,4 @@ export async function sendChat(message) {
     body: JSON.stringify({ message }),
   })
   return data || mockChatReply(message)
-}
-
-export function useAppState() {
-  return { appState, setRole, setStore, currentStore, roleMeta, ROLES, STORES }
 }

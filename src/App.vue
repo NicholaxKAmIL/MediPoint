@@ -1,14 +1,15 @@
 <template>
   <div id="app" class="min-h-screen bg-slate-50">
-    <NavBar />
+    <NavBar v-if="isLoggedIn" />
     <router-view />
-    <AIChatWidget />
+    <AIChatWidget v-if="isLoggedIn" />
   </div>
 </template>
 
 <script setup>
 import NavBar from '@/components/NavBar.vue'
 import AIChatWidget from '@/components/AIChatWidget.vue'
+import { isLoggedIn } from '@/composables/useAuth'
 </script>
 
 <style>

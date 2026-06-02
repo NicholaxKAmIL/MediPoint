@@ -1,18 +1,26 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { fetchRegulations } from '@/data'
 import { REGULATION_SOURCES } from '@/data/mockRegulations'
-import { useAppState } from '@/composables/useStoreData'
+import { currentAccount, currentRole } from '@/composables/useAuth'
+import { useStoreScope } from '@/composables/useStoreScope'
+import { useScopedLoader } from '@/composables/useScopedLoader'
 import RiskBadge from '@/components/RiskBadge.vue'
 
-const { appState, currentStore } = useAppState()
+const { scopeName } = useStoreScope()
 
-const loading = ref(true)
 const items = ref([])
 const activeSource = ref('All')
 const expandedId = ref(null)
 
-const storeName = computed(() => currentStore().name)
+const { loading } = useScopedLoader(
+  () => fetchRegulations(currentAccount.value),
+  (d) => {
+    if (!d) return
+    items.value = d.items
+  },
+  { watchSource: currentAccount }
+)
 
 const filtered = computed(() => {
   if (activeSource.value === 'All') return items.value
@@ -37,19 +45,6 @@ function toggle(id) {
   expandedId.value = expandedId.value === id ? null : id
 }
 
-async function load(sid) {
-  const token = ++loadToken
-  loading.value = true
-  const d = await fetchRegulations(sid)
-  if (token !== loadToken) return
-  items.value = d.items
-  loading.value = false
-}
-
-let loadToken = 0
-onMounted(() => load(appState.storeId))
-watch(() => appState.storeId, (sid) => load(sid))
-
 const sourceLabel = (s) => ({
   'NMPA': 'NMPA',
   '福建卫健委': '福建卫健委',
@@ -69,8 +64,8 @@ const sourceLabel = (s) => ({
       </div>
 
       <div class="flex items-center gap-2 flex-wrap text-xs">
-        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">当前门店：{{ storeName }}</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ appState.role }}</span>
+        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">范围：{{ scopeName }}</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ currentRole }}</span>
         <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">共 {{ items.length }} 条</span>
       </div>
 

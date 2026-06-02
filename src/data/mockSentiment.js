@@ -32,13 +32,6 @@ const SOURCES = {
   ],
 }
 
-// 门店 → region 映射（S001 福州看全国+福州，S002 厦门+全国，S003 泉州+全国）
-const STORE_REGIONS = {
-  S001: new Set(['全国', '福建', '福州']),
-  S002: new Set(['全国', '福建', '厦门']),
-  S003: new Set(['全国', '福建', '泉州']),
-}
-
 const KEYWORD_TREND = [
   { keyword: '流感', value: 92 },
   { keyword: '连花清瘟', value: 78 },
@@ -61,9 +54,8 @@ const SEVEN_DAY = [
 
 export const SENTIMENT_SOURCES = ['All', 'Weibo', 'Xiaohongshu', 'GovNotice']
 
-export function getSentimentMock(storeId) {
-  const sid = storeId || 'S001'
-  const allowed = STORE_REGIONS[sid] || STORE_REGIONS.S001
+export function getSentimentByScope(account, storeIds) {
+  const allowed = new Set(account?.region_scope || ['全国', '福建'])
   const items = []
   for (const [source, arr] of Object.entries(SOURCES)) {
     for (const it of arr) {
@@ -72,5 +64,11 @@ export function getSentimentMock(storeId) {
       }
     }
   }
-  return { items, keyword_trend: KEYWORD_TREND, seven_day_series: SEVEN_DAY, storeId: sid }
+  return {
+    items,
+    keyword_trend: KEYWORD_TREND,
+    seven_day_series: SEVEN_DAY,
+    storeIds: storeIds || account?.store_ids || [],
+    account_role: account?.role,
+  }
 }

@@ -1,20 +1,21 @@
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref } from 'vue'
 import { fetchDecisions } from '@/data'
-import { useAppState } from '@/composables/useStoreData'
+import { currentAccount, currentRole } from '@/composables/useAuth'
+import { useStoreScope } from '@/composables/useStoreScope'
+import { useScopedLoader } from '@/composables/useScopedLoader'
+import { STORES } from '@/data/mockDashboard'
 import SuggestionCard from '@/components/SuggestionCard.vue'
 import ScriptModal from '@/components/ScriptModal.vue'
 
-const { appState, currentStore } = useAppState()
+const { scopeName } = useStoreScope()
 
-const loading = ref(true)
 const reportDate = ref('')
 const restock = ref([])
 const promotion = ref([])
 
 const modalOpen = ref(false)
 const modalData = ref({})
-const storeName = computed(() => currentStore().name)
 
 function openScript(item) {
   modalData.value = { title: item.topic, category: item.related_category, intro: item.talking_points }
@@ -35,13 +36,18 @@ function showToast(msg) {
   toastTimer = setTimeout(() => (toast.value = ''), 2500)
 }
 
+function storeNameOf(s) {
+  return STORES.find(x => x.store_id === s.store_id)?.name || s.region || '本店'
+}
+
 function exportCsv() {
   const headers = ['编号', '门店', '行动', '主题', '关联品类', 'SKU', '商品名', '当前库存', '毛利率', '话术']
   const rows = [headers.join(',')]
   for (const s of [...restock.value, ...promotion.value]) {
+    const sn = storeNameOf(s)
     for (const it of s.items) {
       rows.push([
-        s.id, storeName.value, s.action === 'Restock' ? '补货' : '促销', s.topic, s.related_category,
+        s.id, sn, s.action === 'Restock' ? '补货' : '促销', s.topic, s.related_category,
         it.sku_id, `"${it.name}"`, it.stock, `${it.margin}%`, `"${s.talking_points.replace(/"/g, '""')}"`,
       ].join(','))
     }
@@ -51,7 +57,7 @@ function exportCsv() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `MediPoint_${storeName.value}_采购单_${reportDate.value}.csv`
+  a.download = `MediPoint_${scopeName.value}_采购单_${reportDate.value}.csv`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
@@ -64,20 +70,16 @@ async function exportPdf() {
   setTimeout(() => window.print(), 300)
 }
 
-async function load(sid) {
-  const token = ++loadToken
-  loading.value = true
-  const d = await fetchDecisions(sid)
-  if (token !== loadToken) return
-  reportDate.value = d.date
-  restock.value = d.restock
-  promotion.value = d.promotion
-  loading.value = false
-}
-
-let loadToken = 0
-onMounted(() => load(appState.storeId))
-watch(() => appState.storeId, (sid) => load(sid))
+const { loading } = useScopedLoader(
+  () => fetchDecisions(currentAccount.value),
+  (d) => {
+    if (!d) return
+    reportDate.value = d.date
+    restock.value = d.restock
+    promotion.value = d.promotion
+  },
+  { watchSource: currentAccount }
+)
 </script>
 
 <template>
@@ -89,7 +91,7 @@ watch(() => appState.storeId, (sid) => load(sid))
             <span class="w-2 h-7 bg-red-500 rounded-full"></span>
             AI 采购决策
           </h1>
-          <p class="text-xs text-slate-500 mt-1">报告日期 · {{ reportDate }} · {{ storeName }}</p>
+          <p class="text-xs text-slate-500 mt-1">报告日期 · {{ reportDate }} · {{ scopeName }}</p>
         </div>
         <div class="flex gap-2">
           <button @click="exportPdf" class="text-xs bg-white border border-slate-300 px-3 py-2 rounded-md font-medium hover:bg-slate-50">
@@ -102,8 +104,8 @@ watch(() => appState.storeId, (sid) => load(sid))
       </div>
 
       <div class="flex items-center gap-2 flex-wrap text-xs">
-        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">当前门店：{{ storeName }}</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ appState.role }}</span>
+        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">范围：{{ scopeName }}</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ currentRole }}</span>
       </div>
 
       <section v-if="loading" class="text-center text-slate-400 py-10 text-sm">加载中...</section>

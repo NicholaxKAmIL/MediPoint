@@ -1,19 +1,31 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { fetchSentiment } from '@/data'
 import { SENTIMENT_SOURCES } from '@/data/mockSentiment'
-import { useAppState } from '@/composables/useStoreData'
+import { currentAccount, currentRole } from '@/composables/useAuth'
+import { useStoreScope } from '@/composables/useStoreScope'
+import { useScopedLoader } from '@/composables/useScopedLoader'
 import InsightCard from '@/components/InsightCard.vue'
 
-const { appState, currentStore } = useAppState()
+const { scopeName } = useStoreScope()
 
-const loading = ref(true)
 const allItems = ref([])
 const keywordTrend = ref([])
 const series = ref([])
 const activeTab = ref('All')
 
-const storeName = computed(() => currentStore().name)
+const { loading } = useScopedLoader(
+  () => fetchSentiment(currentAccount.value),
+  (d) => {
+    if (!d) return
+    allItems.value = d.items
+    keywordTrend.value = d.keyword_trend
+    series.value = d.seven_day_series
+  },
+  { watchSource: currentAccount }
+)
+
+const title = computed(() => currentRole.value === 'HQ Manager' ? '全网舆情监控' : '区域舆情监控')
 
 const sourceLabel = (s) => ({
   All: '全部',
@@ -35,21 +47,6 @@ const filtered = computed(() => {
   return allItems.value.filter(i => i.source === activeTab.value)
 })
 
-async function load(sid) {
-  const token = ++loadToken
-  loading.value = true
-  const d = await fetchSentiment(sid)
-  if (token !== loadToken) return
-  allItems.value = d.items
-  keywordTrend.value = d.keyword_trend
-  series.value = d.seven_day_series
-  loading.value = false
-}
-
-let loadToken = 0
-onMounted(() => load(appState.storeId))
-watch(() => appState.storeId, (sid) => load(sid))
-
 const maxSeriesValue = computed(() => {
   if (!series.value.length) return 100
   return Math.max(...series.value.flatMap(s => [s.Weibo, s.Xiaohongshu, s.GovNotice]))
@@ -61,15 +58,15 @@ const maxSeriesValue = computed(() => {
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <span class="w-2 h-7 bg-blue-500 rounded-full"></span>
-          全网舆情监控
-        </h1>
-        <p class="text-xs text-slate-500 mt-1">微博 · 小红书 · 政府公告 — 实时驱动决策</p>
-      </div>
+            <span class="w-2 h-7 bg-blue-500 rounded-full"></span>
+            {{ title }}
+          </h1>
+          <p class="text-xs text-slate-500 mt-1">微博 · 小红书 · 政府公告 — 实时驱动决策 · {{ scopeName }}</p>
+        </div>
 
-      <div class="flex items-center gap-2 flex-wrap text-xs">
-        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">当前门店：{{ storeName }}</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ appState.role }}</span>
+        <div class="flex items-center gap-2 flex-wrap text-xs">
+        <span class="px-2 py-1 rounded-full bg-slate-200 text-slate-700 font-medium">范围：{{ scopeName }}</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">当前角色：{{ currentRole }}</span>
         <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">共 {{ allItems.length }} 条</span>
       </div>
 

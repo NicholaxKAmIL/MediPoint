@@ -103,8 +103,11 @@ export const REGULATIONS = [
 
 export const REGULATION_SOURCES = ['All', 'NMPA', '福建卫健委', '福建 CDC']
 
-export function getRegulationsMock(storeId) {
-  const sid = storeId || 'S001'
-  const items = REGULATIONS.filter(r => !r.regions || r.regions.includes('全国') || r.regions.includes('福建'))
-  return { items, storeId: sid }
+export function getRegulationsByScope(account, storeIds) {
+  const allowed = new Set(account?.region_scope || ['全国', '福建'])
+  const items = REGULATIONS.filter(r => {
+    if (!r.regions) return true
+    return r.regions.some(reg => allowed.has(reg))
+  })
+  return { items, storeIds: storeIds || account?.store_ids || [], account_role: account?.role }
 }
