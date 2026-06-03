@@ -52,6 +52,16 @@ export const ACCOUNTS = [
     region_scope: ['全国', '福建', '厦门'],
     cities: ['厦门市'],
   },
+  {
+    email: 'huang.pharma.qz@medipoint.cn',
+    name: '黄药师',
+    role: '门店药师',
+    role_label: '门店药师 · 泉州',
+    avatar: '🧑‍⚕️',
+    store_ids: ['S003'],
+    region_scope: ['全国', '福建', '泉州'],
+    cities: ['泉州市'],
+  },
 ]
 
 export function findAccountByEmail(email) {

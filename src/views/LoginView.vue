@@ -24,7 +24,7 @@ function pick(email) {
       <div class="text-center mb-8">
         <div class="inline-flex items-center gap-3 mb-3">
           <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-lg shadow-lg">M</div>
-          <h1 class="text-3xl font-black text-slate-900">药点 MediPoint</h1>
+          <h1 class="text-3xl font-black text-slate-900">闽药智典 MediPoint</h1>
         </div>
         <p class="text-sm text-slate-500">ERP 智慧商情 · 福建 — 选择演示账号登录</p>
       </div>
@@ -57,7 +57,7 @@ function pick(email) {
       </div>
 
       <p class="text-center text-[10px] text-slate-400 mt-6">
-        演示用 — 任意账号均可登录，无密码 · 数据为前端内嵌 mock
+        演示用 — 任意账号均可登录，无密码
       </p>
     </div>
   </div>

@@ -11,6 +11,7 @@ const input = ref('')
 const loading = ref(false)
 const messagesEl = ref(null)
 let abortController = null
+let _scrollRaf = null
 
 onUnmounted(() => {
   if (abortController) abortController.abort()
@@ -85,6 +86,15 @@ function safeHref(u) {
   const s = String(u).trim()
   return /^https?:\/\//i.test(s) ? s : null
 }
+
+const SOURCE_LABELS = {
+  'DeepSeek-RAG': '基于知识库 (RAG)',
+  'DeepSeek-General': '通用 AI',
+  'FAQ-Fallback': '常见问答',
+}
+function sourceLabel(s) {
+  return SOURCE_LABELS[s] || s
+}
 </script>
 
 <template>
@@ -118,7 +128,7 @@ function safeHref(u) {
             }`"
           >
             <p v-if="m.text || m.role === 'user'" class="leading-relaxed whitespace-pre-wrap px-3 py-2">{{ m.text }}</p>
-            <p v-if="m.source" class="text-[10px] px-3 pb-1 opacity-70">📎 {{ m.source }}</p>
+            <p v-if="m.source" class="text-[10px] px-3 pb-1 opacity-70">📎 {{ sourceLabel(m.source) }}</p>
             <details
               v-if="m.role === 'ai' && m.references && m.references.length"
               class="border-t border-slate-100 bg-slate-50/60 text-[11px] text-slate-600"

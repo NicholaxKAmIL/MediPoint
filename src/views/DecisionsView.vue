@@ -18,7 +18,16 @@ const modalOpen = ref(false)
 const modalData = ref({})
 
 function openScript(item) {
-  modalData.value = { title: item.topic, category: item.related_category, intro: item.talking_points }
+  modalData.value = {
+    title: item.topic,
+    category: item.related_category,
+    action: item.action,
+    confidence: item.confidence,
+    talking_points: item.talking_points,
+    reason: item.reason,
+    items: item.items,
+    sources: item.sources,
+  }
   modalOpen.value = true
 }
 function openSource(src) {
@@ -120,6 +129,7 @@ const { loading } = useScopedLoader(
             v-for="s in restock"
             :key="s.id"
             :suggestion="s"
+            :role="currentRole"
             @open-script="openScript"
             @open-source="openSource"
           />
@@ -134,6 +144,7 @@ const { loading } = useScopedLoader(
             v-for="s in promotion"
             :key="s.id"
             :suggestion="s"
+            :role="currentRole"
             @open-script="openScript"
             @open-source="openSource"
           />
@@ -141,7 +152,7 @@ const { loading } = useScopedLoader(
       </template>
     </main>
 
-    <ScriptModal :show="modalOpen" :data="modalData" @close="modalOpen = false" />
+    <ScriptModal :show="modalOpen" :data="modalData" :role="currentRole" @close="modalOpen = false" />
 
     <div v-if="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-lg shadow-lg text-sm z-50">
       {{ toast }}

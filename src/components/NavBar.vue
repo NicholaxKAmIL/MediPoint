@@ -25,7 +25,7 @@ function doLogout() {
           <div class="flex items-center gap-3 flex-shrink-0">
             <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-sm">M</div>
             <div class="hidden sm:block">
-              <h1 class="text-base font-bold text-slate-900 leading-tight">药点 MediPoint</h1>
+              <h1 class="text-base font-bold text-slate-900 leading-tight">闽药智典 MediPoint</h1>
               <p class="text-[10px] text-slate-500 leading-none">ERP 智慧商情 · 福建</p>
             </div>
           </div>

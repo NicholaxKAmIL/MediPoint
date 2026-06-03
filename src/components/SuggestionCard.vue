@@ -1,17 +1,48 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import ConfidenceBadge from './ConfidenceBadge.vue'
+import { fetchDecisionScript } from '@/composables/useStoreData'
 
 const props = defineProps({
   suggestion: { type: Object, required: true },
+  role: { type: String, default: '' },
 })
 const emit = defineEmits(['open-script', 'open-source'])
+
+const isPharmacist = computed(() => props.role === '门店药师')
 
 const actionStyle = computed(() =>
   props.suggestion.action === 'Restock'
     ? { tag: '建议补货', tagClass: 'bg-red-100 text-red-700', cardClass: 'border-red-200' }
     : { tag: '行销推广', tagClass: 'bg-blue-100 text-blue-700', cardClass: 'border-blue-200' }
 )
+
+const localTalkingPoints = ref(props.suggestion.talking_points)
+const localReason = ref(props.suggestion.reason)
+const scriptLoading = ref(false)
+
+async function loadScript() {
+  if (localTalkingPoints.value) return
+  if (!props.suggestion.script_key) return
+  scriptLoading.value = true
+  const data = await fetchDecisionScript(props.suggestion.script_key)
+  scriptLoading.value = false
+  if (data) {
+    if (data.talking_points) localTalkingPoints.value = data.talking_points
+    if (data.reason) localReason.value = data.reason
+  }
+}
+
+onMounted(loadScript)
+watch(() => props.suggestion.script_key, loadScript)
+
+function openDetail() {
+  emit('open-script', {
+    ...props.suggestion,
+    talking_points: localTalkingPoints.value,
+    reason: localReason.value,
+  })
+}
 
 function stockStatus(qty) {
   if (qty <= 30) return { label: '急需进货', dot: 'bg-red-500', text: 'text-red-600' }
@@ -25,6 +56,10 @@ function marginColor(m) {
   if (m >= 15) return 'text-amber-600 bg-amber-50 border-amber-200'
   return 'text-red-600 bg-red-50 border-red-200'
 }
+
+const highRiskAlertCount = computed(() =>
+  (props.suggestion.sources || []).filter(s => s.type === 'alert' && s.risk_level === 'High').length
+)
 </script>
 
 <template>
@@ -37,16 +72,25 @@ function marginColor(m) {
           </span>
           <h3 class="text-base font-bold text-slate-800">{{ suggestion.topic }}</h3>
           <ConfidenceBadge :level="suggestion.confidence" />
+          <span v-if="highRiskAlertCount > 0" class="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+            🔔 {{ highRiskAlertCount }} 条高风险公告
+          </span>
         </div>
-        <p class="text-sm text-slate-600">{{ suggestion.reason }}</p>
+        <p v-if="localReason" class="text-sm text-slate-600">{{ localReason }}</p>
+        <p v-else-if="scriptLoading" class="text-sm text-slate-400 italic">AI 分析中...</p>
         <div v-if="suggestion.sources?.length" class="mt-2 flex flex-wrap gap-1">
           <button
             v-for="(s, idx) in suggestion.sources"
             :key="idx"
             @click="emit('open-source', s)"
-            class="text-[10px] text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 transition"
+            :class="[
+              'text-[10px] px-2 py-0.5 rounded border transition',
+              s.type === 'alert'
+                ? 'text-red-700 bg-red-50 border-red-200 hover:border-red-400 font-medium'
+                : 'text-slate-500 bg-white border-slate-200 hover:border-emerald-300 hover:text-emerald-700',
+            ]"
           >
-            📎 {{ s.label }}
+            {{ s.type === 'alert' ? '🔔' : '📎' }} {{ s.label }}
           </button>
         </div>
       </div>
@@ -97,17 +141,45 @@ function marginColor(m) {
         </table>
       </div>
 
+      <!-- 药师版: 行销话术 (绿色面板) -->
       <div
-        @click="emit('open-script', suggestion)"
+        v-if="isPharmacist"
+        @click="openDetail"
         class="mt-4 bg-emerald-50 rounded-lg p-3 flex gap-3 items-start cursor-pointer hover:bg-emerald-100 transition-colors border border-transparent hover:border-emerald-200"
       >
         <span class="text-yellow-500 text-xl leading-none flex-shrink-0">💡</span>
         <div class="w-full">
           <div class="flex justify-between items-center">
-            <span class="text-xs font-bold text-emerald-700 uppercase">药师销售话术 (点击查看详情)</span>
+            <span class="text-xs font-bold text-emerald-700 uppercase">药师行销话术 (点击查看详情)</span>
             <span class="text-emerald-600">›</span>
           </div>
-          <p class="text-sm text-emerald-900 mt-1 leading-relaxed">{{ suggestion.talking_points }}</p>
+          <p v-if="localTalkingPoints" class="text-sm text-emerald-900 mt-1 leading-relaxed">{{ localTalkingPoints }}</p>
+          <p v-else-if="scriptLoading" class="text-sm text-emerald-700/60 mt-1 italic flex items-center gap-2">
+            <span class="inline-block w-3 h-3 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin"></span>
+            AI 正在生成行销建议...
+          </p>
+          <p v-else class="text-sm text-slate-400 mt-1 italic">暂无可用话术</p>
+        </div>
+      </div>
+
+      <!-- 督导/管理者版: 采购补货建议 (蓝色面板) -->
+      <div
+        v-else
+        @click="openDetail"
+        class="mt-4 bg-blue-50 rounded-lg p-3 flex gap-3 items-start cursor-pointer hover:bg-blue-100 transition-colors border border-transparent hover:border-blue-200"
+      >
+        <span class="text-blue-500 text-xl leading-none flex-shrink-0">📦</span>
+        <div class="w-full">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-blue-700 uppercase">基于舆情的采购补货建议 (点击查看详情)</span>
+            <span class="text-blue-600">›</span>
+          </div>
+          <p v-if="localReason" class="text-sm text-blue-900 mt-1 leading-relaxed line-clamp-2">{{ localReason }}</p>
+          <p v-else-if="scriptLoading" class="text-sm text-blue-700/60 mt-1 italic flex items-center gap-2">
+            <span class="inline-block w-3 h-3 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></span>
+            AI 正在分析舆情与库存...
+          </p>
+          <p v-else class="text-sm text-slate-400 mt-1 italic">暂无建议</p>
         </div>
       </div>
     </div>

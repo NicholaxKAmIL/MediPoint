@@ -28,7 +28,7 @@ const sent = computed(() => sentimentMap[props.insight.sentiment] || sentimentMa
         <span :class="`text-[10px] font-bold px-2 py-0.5 rounded ${tag.cls}`">{{ tag.label }}</span>
         <span :class="`text-[10px] px-1.5 py-0.5 rounded ${sent.cls}`">● {{ sent.label }}</span>
       </div>
-      <span class="text-[10px] text-slate-400">{{ (insight.crawled_at || '').slice(0, 10) || '今日' }}</span>
+      <span class="text-[10px] text-slate-400">{{ ((insight.display_at || insight.crawled_at) || '').slice(0, 10) || '今日' }}</span>
     </div>
     <h4 class="text-sm font-bold text-slate-800 mb-1 leading-snug">
       <a :href="insight.url" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-600">

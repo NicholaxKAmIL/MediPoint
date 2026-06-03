@@ -40,6 +40,15 @@ function useSuggestion(s) {
   send()
 }
 
+const SOURCE_LABELS = {
+  'DeepSeek-RAG': '基于知识库 (RAG)',
+  'DeepSeek-General': '通用 AI',
+  'FAQ-Fallback': '常见问答',
+}
+function sourceLabel(s) {
+  return SOURCE_LABELS[s] || s
+}
+
 function scrollBottom() {
   if (messagesEl.value) {
     messagesEl.value.scrollTop = messagesEl.value.scrollHeight
@@ -81,7 +90,7 @@ defineExpose({ input, send })
           }`"
         >
           <p class="leading-relaxed whitespace-pre-wrap">{{ m.text }}</p>
-          <p v-if="m.source && m.role === 'ai'" class="text-[10px] mt-1 opacity-70">📎 {{ m.source }}</p>
+          <p v-if="m.source && m.role === 'ai'" class="text-[10px] mt-1 opacity-70">📎 {{ sourceLabel(m.source) }}</p>
         </div>
       </div>
       <div v-if="loading" class="flex justify-start">

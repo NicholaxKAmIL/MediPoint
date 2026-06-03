@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { fetchDashboard, fetchDecisions, fetchRegulations } from '@/data'
-import { currentAccount } from '@/composables/useAuth'
+import { currentAccount, currentRole } from '@/composables/useAuth'
 import { useStoreScope } from '@/composables/useStoreScope'
 import { useScopedLoader } from '@/composables/useScopedLoader'
 import AlertTicker from '@/components/AlertTicker.vue'
@@ -26,7 +26,12 @@ function openScript(item) {
   modalData.value = {
     title: item.topic,
     category: item.related_category,
-    intro: item.talking_points,
+    action: item.action,
+    confidence: item.confidence,
+    talking_points: item.talking_points,
+    reason: item.reason,
+    items: item.items,
+    sources: item.sources,
   }
   modalOpen.value = true
 }
@@ -94,6 +99,7 @@ const storeName = computed(() => scopeName.value)
               v-for="s in todaySuggestions"
               :key="s.id"
               :suggestion="s"
+              :role="currentRole"
               @open-script="openScript"
             />
           </div>
@@ -136,6 +142,6 @@ const storeName = computed(() => scopeName.value)
       </section>
     </main>
 
-    <ScriptModal :show="modalOpen" :data="modalData" @close="modalOpen = false" />
+    <ScriptModal :show="modalOpen" :data="modalData" :role="currentRole" @close="modalOpen = false" />
   </div>
 </template>

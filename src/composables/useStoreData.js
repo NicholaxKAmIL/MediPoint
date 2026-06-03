@@ -87,6 +87,40 @@ export async function fetchDecisions(account) {
   return fetchWithMock('decisions', `/api/decisions?${storeParam(account)}`, account, getDecisionsByScope)
 }
 
+// 异步拉取单条 talking_point / reason — 缓存 key 是 script_key (store|date|action|category)
+const _scriptCache = new Map()
+const _scriptInFlight = new Map()
+const SCRIPT_CACHE_TTL_MS = 30 * 60 * 1000 // 30 分钟, 后端 12h 也会失效
+
+function scriptKey(key) {
+  return `script::${key}`
+}
+
+export async function fetchDecisionScript(key) {
+  if (!key) return null
+  const ck = scriptKey(key)
+  const cached = _scriptCache.get(ck)
+  if (cached && Date.now() - cached.t < SCRIPT_CACHE_TTL_MS) return cached.v
+  if (_scriptInFlight.has(ck)) return _scriptInFlight.get(ck)
+
+  const headers = API_AUTH ? { Authorization: API_AUTH } : {}
+  const promise = fetch(`${API_BASE}/api/decisions/script?key=${encodeURIComponent(key)}`, { headers })
+    .then(async (r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      const data = await r.json()
+      _scriptCache.set(ck, { t: Date.now(), v: data })
+      _scriptInFlight.delete(ck)
+      return data
+    })
+    .catch((e) => {
+      console.warn(`[api] script fetch failed for ${key}:`, e.message)
+      _scriptInFlight.delete(ck)
+      return null
+    })
+  _scriptInFlight.set(ck, promise)
+  return promise
+}
+
 export async function fetchRegulations(account) {
   if (USE_MOCK) return getRegulationsByScope(account, account?.store_ids || [])
   const key = _memoKey(account, 'regulations')

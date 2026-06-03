@@ -51,6 +51,11 @@ const maxSeriesValue = computed(() => {
   if (!series.value.length) return 100
   return Math.max(...series.value.flatMap(s => [s.Weibo, s.Xiaohongshu, s.GovNotice]))
 })
+
+const maxKw = computed(() => {
+  if (!keywordTrend.value.length) return 0
+  return Math.max(...keywordTrend.value.map(k => k.value))
+})
 </script>
 
 <template>
@@ -98,12 +103,13 @@ const maxSeriesValue = computed(() => {
         <aside class="space-y-4">
           <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
             <h3 class="text-sm font-bold text-slate-800 mb-3">关键词热度排行</h3>
-            <div class="space-y-2">
+            <div v-if="!keywordTrend.length" class="text-xs text-slate-400 py-6 text-center">暂无足够数据</div>
+            <div v-else class="space-y-2">
               <div v-for="(k, idx) in keywordTrend" :key="k.keyword" class="flex items-center gap-2 text-xs">
                 <span class="w-4 text-slate-400 text-right">{{ idx + 1 }}</span>
                 <span class="font-medium text-slate-700 w-16 flex-shrink-0">{{ k.keyword }}</span>
                 <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div class="bg-emerald-500 h-full" :style="`width: ${k.value}%`"></div>
+                  <div class="bg-emerald-500 h-full" :style="`width: ${maxKw ? Math.min(100, (k.value / maxKw) * 100) : 0}%`"></div>
                 </div>
                 <span class="text-slate-400 w-8 text-right">{{ k.value }}</span>
               </div>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { fetchDashboard, fetchDecisions, fetchRegulations } from '@/data'
-import { currentAccount } from '@/composables/useAuth'
+import { currentAccount, currentRole } from '@/composables/useAuth'
 import { useStoreScope } from '@/composables/useStoreScope'
 import { useScopedLoader } from '@/composables/useScopedLoader'
 import { KPI_BY_STORE_EXPORT } from '@/data/mockDashboard'
@@ -46,7 +46,10 @@ const { loading } = useScopedLoader(
     reportDate.value = d.report_date
     kpi.value = d.kpiData
     alerts.value = d.alerts
-    urgentSuggestions.value = dec.restock.slice(0, 3)
+    const confRank = { A: 0, B: 1, C: 2 }
+    urgentSuggestions.value = [...dec.restock]
+      .sort((a, b) => (confRank[a.confidence] ?? 3) - (confRank[b.confidence] ?? 3))
+      .slice(0, 5)
     topRisks.value = reg.items
       .filter(r => r.risk_level === 'High' || r.risk_level === 'Medium')
       .slice(0, 5)
@@ -107,7 +110,7 @@ const { loading } = useScopedLoader(
         <section class="lg:col-span-2 space-y-4">
           <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
             <span class="w-1.5 h-5 bg-red-500 rounded"></span>
-            紧急建议 Top 3（跨区域汇总）
+            紧急建议（按信心等级排序，跨区域汇总）
           </h2>
           <div v-if="loading" class="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm">
             AI 正在分析 ERP 与舆情数据...
@@ -117,6 +120,7 @@ const { loading } = useScopedLoader(
               v-for="s in urgentSuggestions"
               :key="s.id"
               :suggestion="s"
+              :role="currentRole"
             />
           </div>
         </section>
