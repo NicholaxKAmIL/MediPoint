@@ -19,6 +19,7 @@ const actionStyle = computed(() =>
 
 const localTalkingPoints = ref(props.suggestion.talking_points)
 const localReason = ref(props.suggestion.reason)
+const localUpsell = ref(props.suggestion.upsell)
 const scriptLoading = ref(false)
 
 async function loadScript() {
@@ -30,6 +31,7 @@ async function loadScript() {
   if (data) {
     if (data.talking_points) localTalkingPoints.value = data.talking_points
     if (data.reason) localReason.value = data.reason
+    if (data.upsell) localUpsell.value = data.upsell
   }
 }
 
@@ -41,6 +43,7 @@ function openDetail() {
     ...props.suggestion,
     talking_points: localTalkingPoints.value,
     reason: localReason.value,
+    upsell: localUpsell.value,
   })
 }
 

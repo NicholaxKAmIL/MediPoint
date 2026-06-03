@@ -26,6 +26,8 @@ const upsellMap = {
 }
 
 const upsell = computed(() => {
+  // 优先用 LLM + 静态表算出的 upsell, 跟 talking_points 保持同方向
+  if (props.data?.upsell) return props.data.upsell
   const cat = props.data?.category || ''
   for (const k of Object.keys(upsellMap)) {
     if (cat.includes(k)) return upsellMap[k]

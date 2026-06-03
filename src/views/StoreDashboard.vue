@@ -29,6 +29,7 @@ function openScript(item) {
     action: item.action,
     confidence: item.confidence,
     talking_points: item.talking_points,
+    upsell: item.upsell,
     reason: item.reason,
     items: item.items,
     sources: item.sources,
