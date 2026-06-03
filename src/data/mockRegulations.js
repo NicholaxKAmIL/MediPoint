@@ -24,7 +24,7 @@ export const REGULATIONS = [
   },
   {
     id: 'R-003',
-    source: '福建卫健委',
+    source: '福建省卫健委',
     title: '关于做好冬春季流感与呼吸道传染病防控工作的通知',
     summary: '要求加强药品储备，药店、基层医疗机构 24 小时保障退烧止咳药品供应。',
     affected_categories: ['退烧药', '止咳药', '感冒药'],
@@ -35,7 +35,7 @@ export const REGULATIONS = [
   },
   {
     id: 'R-004',
-    source: '福建卫健委',
+    source: '福建省卫健委',
     title: '关于推进电子处方流转工作的实施意见',
     summary: '鼓励互联网医院处方流转至零售药店，凭电子处方销售处方药。',
     affected_categories: ['处方药', '互联网医疗'],
@@ -79,7 +79,7 @@ export const REGULATIONS = [
   },
   {
     id: 'R-008',
-    source: '福建卫健委',
+    source: '福建省卫健委',
     title: '厦门地区过敏季延长应对指引',
     summary: '提示思明、湖里两区花粉浓度持续偏高，建议药店加强鼻喷与抗组胺备货。',
     affected_categories: ['过敏', '鼻喷'],
@@ -101,7 +101,7 @@ export const REGULATIONS = [
   },
 ]
 
-export const REGULATION_SOURCES = ['All', 'NMPA', '福建卫健委', '福建 CDC']
+export const REGULATION_SOURCES = ['All', 'NMPA', '福建省卫健委', '福建 CDC']
 
 export function getRegulationsByScope(account, storeIds) {
   const allowed = new Set(account?.region_scope || ['全国', '福建'])

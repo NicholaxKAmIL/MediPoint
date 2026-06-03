@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { fetchRegulations } from '@/data'
-import { REGULATION_SOURCES } from '@/data/mockRegulations'
 import { currentAccount, currentRole } from '@/composables/useAuth'
 import { useStoreScope } from '@/composables/useStoreScope'
 import { useScopedLoader } from '@/composables/useScopedLoader'
@@ -22,13 +21,15 @@ const { loading } = useScopedLoader(
   { watchSource: currentAccount }
 )
 
+const SOURCE_FILTERS = ['All', 'NMPA', '福建省卫健委', '福建 CDC', '中国 CDC']
+
 const filtered = computed(() => {
   if (activeSource.value === 'All') return items.value
   return items.value.filter(i => i.source === activeSource.value)
 })
 
 const sourceCounts = computed(() => {
-  const c = { All: items.value.length, NMPA: 0, '福建卫健委': 0, '福建 CDC': 0 }
+  const c = { All: items.value.length, NMPA: 0, '福建省卫健委': 0, '福建 CDC': 0, '中国 CDC': 0 }
   for (const it of items.value) {
     if (c[it.source] !== undefined) c[it.source]++
   }
@@ -47,9 +48,15 @@ function toggle(id) {
 
 const sourceLabel = (s) => ({
   'NMPA': 'NMPA',
-  '福建卫健委': '福建卫健委',
+  '福建省卫健委': '福建省卫健委',
   '福建 CDC': '福建 CDC',
+  '中国 CDC': '中国 CDC',
 }[s] || s)
+
+function formatDate(iso) {
+  if (!iso) return ''
+  return String(iso).slice(0, 10)
+}
 </script>
 
 <template>
@@ -60,7 +67,7 @@ const sourceLabel = (s) => ({
           <span class="w-2 h-7 bg-amber-500 rounded-full"></span>
           法规政策通告
         </h1>
-        <p class="text-xs text-slate-500 mt-1">NMPA · 福建卫健委 · 福建 CDC — 合规风险一目了然</p>
+        <p class="text-xs text-slate-500 mt-1">NMPA · 福建省卫健委 · 福建 CDC · 中国 CDC — 合规风险一目了然</p>
       </div>
 
       <div class="flex items-center gap-2 flex-wrap text-xs">
@@ -86,7 +93,7 @@ const sourceLabel = (s) => ({
 
       <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         <button
-          v-for="src in REGULATION_SOURCES"
+          v-for="src in SOURCE_FILTERS"
           :key="src"
           @click="activeSource = src"
           :aria-pressed="activeSource === src"
@@ -117,8 +124,11 @@ const sourceLabel = (s) => ({
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                   {{ sourceLabel(item.source) }}
                 </span>
+                <span v-if="item.category && item.category !== sourceLabel(item.source)" class="text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-700">
+                  {{ item.category }}
+                </span>
                 <RiskBadge :level="item.risk_level" />
-                <span class="text-[10px] text-slate-400">{{ item.published_at }}</span>
+                <span class="text-[10px] text-slate-400">{{ formatDate(item.published_at) }}</span>
               </div>
               <h3 class="text-sm font-bold text-slate-800 leading-snug">{{ item.title }}</h3>
               <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ item.summary }}</p>
@@ -131,7 +141,21 @@ const sourceLabel = (s) => ({
               <p class="text-xs font-bold text-slate-500 mb-1">全文摘要</p>
               <p class="text-slate-700 leading-relaxed">{{ item.summary }}</p>
             </div>
-            <div>
+            <div v-if="item.url">
+              <p class="text-xs font-bold text-slate-500 mb-1">资料来源</p>
+              <a
+                :href="item.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-100 text-xs break-all"
+                @click.stop
+              >
+                <span>🔗</span>
+                <span class="font-mono">{{ item.url }}</span>
+                <span class="text-emerald-500">↗</span>
+              </a>
+            </div>
+            <div v-if="item.affected_categories && item.affected_categories.length">
               <p class="text-xs font-bold text-slate-500 mb-1">影响品类</p>
               <div class="flex flex-wrap gap-1">
                 <span v-for="c in item.affected_categories" :key="c" class="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded">
@@ -139,7 +163,7 @@ const sourceLabel = (s) => ({
                 </span>
               </div>
             </div>
-            <div>
+            <div v-if="item.response">
               <p class="text-xs font-bold text-slate-500 mb-1">建议应对措施</p>
               <p class="text-emerald-700 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
                 ✅ {{ item.response }}
